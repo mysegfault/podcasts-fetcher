@@ -1,7 +1,7 @@
 # [podcasts-fetcher](https://github.com/mysegfault/podcasts-fetcher)
 Just fetch RSS podcasts as playlist files so you can browse and listen to the various radio entries. It does not download the files, just creates files with the provided URL.
 
-RSS feed is configured by default to get french Radio France [France Culture](http://www.franceculture.fr) shows "Les Nouveaux chemins de la connaissance". Just change the RSS address if you want to fetch any other show.
+RSS feed is configured by default to get french Radio France [France Culture](http://www.franceculture.fr) programmes "Les Nouveaux chemins de la connaissance". Just change the RSS address if you want to fetch any other feed.
 
 ## Install dependencies
 ```sh
