@@ -2,16 +2,19 @@ var Request = require('request');
 var FeedParser = require('feedparser');
 var fs = require('fs');
 var http = require('http');
+var colors = require('colors');
 
-var RSS_URL = 'http://radiofrance-podcast.net/podcast09/rss_10467.xml';
-var DOWNLOAD_FOLDER = 'Radio-France-Podcasts/';
+var RSS_URLs = [
+	'http://radiofrance-podcast.net/podcast09/rss_10467.xml',
+	'http://radiofrance-podcast.net/podcast09/rss_11701.xml',
+];
+var DOWNLOAD_FOLDER = 'Podcasts/';
 
-function run() {
-
-	mkdirSync(DOWNLOAD_FOLDER);
-
-	var request = new Request(RSS_URL);
+function run(RSSFeed) {
+	var request = new Request(RSSFeed);
 	var feedparser = new FeedParser([]);
+	var cptEntries = 0;
+	var feedFolder = '';
 
 	request.on('error', function(error) {
 		// handle any request errors
@@ -21,7 +24,7 @@ function run() {
 	request.on('response', function(res) {
 		var stream = this;
 
-		if (res.statusCode != 200) {
+		if (res.statusCode !== 200) {
 			return this.emit('error', new Error('Bad status code'));
 		}
 
@@ -32,16 +35,30 @@ function run() {
 		// always handle errors
 	});
 
+	feedparser.on('meta', function(meta) {
+		feedFolder = DOWNLOAD_FOLDER + meta.author + '/' + meta.title + '/';
+		//console.log('Creating folder:', feedFolder);
+
+		mkdirSync(DOWNLOAD_FOLDER);
+		mkdirSync(DOWNLOAD_FOLDER + this.meta.author);
+		mkdirSync(feedFolder);
+	});
+
 	feedparser.on('readable', function() {
-		// This is where the action is!
+
 		var stream = this;
 		var meta = this.meta;
 		var item;
 
 		while (item = stream.read()) {
 			parseFeed(item);
+			cptEntries++;
 		}
 
+	});
+
+	feedparser.on('end', function() {
+		console.log(String(cptEntries).cyan + ' podcasts have been downloaded to '.yellow + feedFolder.cyan + ' folder'.yellow);
 	});
 
 	function parseFeed(feed) {
@@ -64,7 +81,7 @@ function run() {
 				//console.log(i, feed[i][0]['url']);
 				//console.log(date + ' - ' + title + '.mp3');
 
-				var input = DOWNLOAD_FOLDER + date + ' - ' + title + '.m3u';
+				var input = feedFolder + date + ' - ' + title + '.m3u';
 				var output = feed[i][0]['url'];
 
 				createFile(input, output, function(err) {
@@ -118,20 +135,23 @@ function run() {
 		}
 		return input;
 	}
-	
+
 	function mkdirSync(path) {
 		try {
 			fs.mkdirSync(path);
 		} catch (error) {
-			if (error.code != 'EEXIST') {
+			if (error.code !== 'EEXIST') {
 				throw error;
 			}
 		}
-	};
+	}
+
 }
 
 try {
-	run();
+	for (var i = 0; i < RSS_URLs.length; i++) {
+		run(RSS_URLs[i]);
+	}
 }
 catch (error) {
 	console.error('Error: ', error);
