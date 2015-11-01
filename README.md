@@ -1,7 +1,7 @@
-# [radio-france-podcast-fetcher](https://github.com/mysegfault/radio-france-podcast-fetcher)
-Just fetch Radio France [France Culture](http://www.franceculture.fr) podcasts as playlist files so you can browse and listen to the various radio shows. It does not download the files, just creates files with the provided URL.
+# [podcasts-fetcher](https://github.com/mysegfault/podcasts-fetcher)
+Just fetch RSS podcasts as playlist files so you can browse and listen to the various radio entries. It does not download the files, just creates files with the provided URL.
 
-RSS feed is configured to the show "Les Nouveaux chemins de la connaissance". Just change the RSS address if you want to fetch any other show.
+RSS feed is configured by default to get french Radio France [France Culture](http://www.franceculture.fr) shows "Les Nouveaux chemins de la connaissance". Just change the RSS address if you want to fetch any other show.
 
 ## Install dependencies
 ```sh
@@ -13,7 +13,7 @@ $> npm install
 $> node index.js
 ```
 
-You should find (by default) .m3u files in the "Radio-France-Podcasts" folder
+You should find the .m3u files in the "Radio-France-Podcasts" folder (by default)
 ```sh
 $> ls Radio-France-Podcasts/
 2014-10-30 - Heureux qui comme Ulysse ... 44  LUlysse des frères Coen.m3u
