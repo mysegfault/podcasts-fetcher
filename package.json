@@ -1,0 +1,29 @@
+{
+  "name": "radio-france-podcast-fetcher",
+  "version": "0.1.0",
+  "authors": [
+    "Max <max@wininup.com>"
+  ],
+  "description": "Just fetch Radio France 'France Culture' podcasts",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mysegfault/radio-france-podcast-fetcher.git"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "Radio-France-Podcasts",
+    "nbproject"
+  ],
+  "dependencies": {
+    "feedparser": "^1.1.4",
+    "request": "^2.65.0"
+  },
+  "devDependencies": {},
+  "scripts": {}
+}
