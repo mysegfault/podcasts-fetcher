@@ -4,10 +4,9 @@ var fs = require('fs');
 var http = require('http');
 var colors = require('colors');
 
-var RSS_URLs = [
-	'http://radiofrance-podcast.net/podcast09/rss_10467.xml',
-	'http://radiofrance-podcast.net/podcast09/rss_11701.xml',
-];
+// local options
+var podcasts_fetcher = require('./podcasts_fetcher.json');
+
 var DOWNLOAD_FOLDER = 'Podcasts/';
 
 function run(RSSFeed) {
@@ -149,9 +148,11 @@ function run(RSSFeed) {
 }
 
 try {
-	for (var i = 0; i < RSS_URLs.length; i++) {
-		run(RSS_URLs[i]);
-	}
+    // console.log(podcasts_fetcher.rss_feeds);
+    
+    for (var i = 0; i < podcasts_fetcher.rss_feeds.length; i++) {
+	run(podcasts_fetcher.rss_feeds[i]);
+    }
 }
 catch (error) {
 	console.error('Error: ', error);
