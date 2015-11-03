@@ -3,12 +3,10 @@ var FeedParser = require('feedparser');
 var fs = require('fs');
 var http = require('http');
 var colors = require('colors');
+var sprintf = require("sprintf-js").sprintf;
 
-var RSS_URLs = [
-	'http://radiofrance-podcast.net/podcast09/rss_10467.xml',
-	'http://radiofrance-podcast.net/podcast09/rss_11701.xml',
-];
-var DOWNLOAD_FOLDER = 'Podcasts/';
+// local configuration
+var config = require('./podcasts_fetcher.json');
 
 function run(RSSFeed) {
 	var request = new Request(RSSFeed);
@@ -36,11 +34,11 @@ function run(RSSFeed) {
 	});
 
 	feedparser.on('meta', function(meta) {
-		feedFolder = DOWNLOAD_FOLDER + meta.author + '/' + meta.title + '/';
+		feedFolder = config.download_folder + meta.author + '/' + meta.title + '/';
 		//console.log('Creating folder:', feedFolder);
 
-		mkdirSync(DOWNLOAD_FOLDER);
-		mkdirSync(DOWNLOAD_FOLDER + this.meta.author);
+		mkdirSync(config.download_folder);
+		mkdirSync(config.download_folder + this.meta.author);
 		mkdirSync(feedFolder);
 	});
 
@@ -74,7 +72,9 @@ function run(RSSFeed) {
 			}
 			if (i === 'pubDate') {
 				var dateObj = new Date(feed[i]);
-				date = dateObj.getFullYear() + '-' + twoChars(dateObj.getMonth() + 1) + '-' + twoChars(dateObj.getDate());
+				date = sprintf("%d-%02d-%02d", dateObj.getFullYear(),
+					       dateObj.getMonth() + 1,
+					       dateObj.getDate());
 				//console.log(i, feed[i], date);
 			}
 			if (i === 'enclosures') {
@@ -93,9 +93,9 @@ function run(RSSFeed) {
 
 					//console.log("The file [" + output + "] was saved :)");
 				});
-//				downloadFile(input, output, function(error) {
-//					console.log(error);
-//				});
+				//				downloadFile(input, output, function(error) {
+				//					console.log(error);
+				//				});
 			}
 		}
 	}
@@ -124,18 +124,6 @@ function run(RSSFeed) {
 		fs.writeFile(url, dest, callback);
 	}
 
-	function twoChars(input) {
-		if (input === null || typeof input === 'undefined') {
-			return input;
-		}
-		input = input + '';
-
-		if (input.length === 1) {
-			input = '0' + input;
-		}
-		return input;
-	}
-
 	function mkdirSync(path) {
 		try {
 			fs.mkdirSync(path);
@@ -149,8 +137,10 @@ function run(RSSFeed) {
 }
 
 try {
-	for (var i = 0; i < RSS_URLs.length; i++) {
-		run(RSS_URLs[i]);
+	// console.log(podcasts_fetcher.rss_feeds);
+	
+	for (var i = 0; i < config.rss_feeds.length; i++) {
+		run(config.rss_feeds[i]);
 	}
 }
 catch (error) {
