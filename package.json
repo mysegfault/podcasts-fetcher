@@ -2,7 +2,8 @@
   "name": "radio-france-podcast-fetcher",
   "version": "0.1.0",
   "authors": [
-    "Max <max@wininup.com>"
+    "Max <max@wininup.com>",
+	"lotib <boit.sanssoif@gmail.com>"
   ],
   "description": "Just fetch Radio France 'France Culture' podcasts",
   "repository": {

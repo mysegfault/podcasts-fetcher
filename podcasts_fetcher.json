@@ -1,8 +1,7 @@
 {
-    "rss_feeds": [
-	"http://radiofrance-podcast.net/podcast09/rss_10467.xml",
-	"http://radiofrance-podcast.net/podcast09/rss_11701.xml"
-    ],
-    "download_folder": "Podcasts",
-    "download_mp3": false
+	"rss_feeds": [
+		"http://radiofrance-podcast.net/podcast09/rss_10467.xml",
+		"http://radiofrance-podcast.net/podcast09/rss_11701.xml"
+	],
+	"download_folder": "Podcasts"
 }
