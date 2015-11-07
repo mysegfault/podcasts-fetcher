@@ -5,5 +5,5 @@
 	],
 	"download_folder": "Podcasts",
 	"max_media_download_size": "2000000",
-	"media_download": false
+	"media_download": true
 }
