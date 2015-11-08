@@ -12,50 +12,49 @@ function run(RSSFeed) {
 	var request = new Request(RSSFeed);
 	var feedparser = new FeedParser([]);
 	var feedFolder = '';
+	var feedMeta = {title: "", author: ""};
 	var podcasts = [];
 
 	request.on('error', function(error) {
-		console.error(error);
+		console.error("request error:", error);
 	});
 
 	request.on('response', function(res) {
-		var stream = this;
-
 		if (res.statusCode !== 200) {
 			return this.emit('error', new Error('Bad status code'));
 		}
-		stream.pipe(feedparser);
+		this.pipe(feedparser);
 	});
 
 	feedparser.on('error', function(error) {
-		// always handle errors
-		console.error('error:', error);
+		console.error('feedparser error:', error);
 	});
 
 	feedparser.on('meta', function(meta) {
-		feedFolder = config.download_folder + '/' + meta.author + '/' + meta.title + '/';
-		//console.log('Creating folder:', feedFolder);
-
-		mkdirSync(config.download_folder);
-		mkdirSync(config.download_folder + '/' + meta.author);
-		mkdirSync(feedFolder);
+		feedMeta = meta;
+		feedFolder = config.download_folder + '/' + feedMeta.author + '/' + feedMeta.title + '/';
 	});
 
 	feedparser.on('readable', function() {
-
-		var stream = this;
-		var meta = this.meta;
 		var item;
-
-		while (item = stream.read()) {
+		while (item = this.read()) {
 			podcasts.push(parseItem(item));
 		}
 	});
 
 	feedparser.on('end', function() {
-		processNextPodcast();
-		
+		mkdirSync(config.download_folder);
+		mkdirSync(config.download_folder + '/' + feedMeta.author);
+		mkdirSync(feedFolder);
+
 		console.log(String(podcasts.length).cyan + ' podcasts have been downloaded to '.yellow + feedFolder.cyan + ' folder'.yellow);
+		
+		// saving playlist of all feed podcast
+		savePodcastPlaylist(config.download_folder + '/' + feedMeta.author + '/' + feedMeta.title + '.m3u',
+				    podcasts.map(function(elem){
+					    return '#EXTINF:,' + elem.title + '\n' +  elem.url_m;
+				    }).join("\n"));;
+		processNextPodcast();
 	});
 
 	function processNextPodcast() {
@@ -64,72 +63,65 @@ function run(RSSFeed) {
 		if (typeof podcast === 'undefined') {
 			return;
 		}
-
-		//console.log(podcast.title, podcast.length);
-		
-		// saving playlist file
-		createFile(feedFolder + podcast.playlist, podcast.url_m, function(err) {
-			if (err) {
-				console.error(err);
-				console.error("The file [" + podcast.playlist + "] could not be saved :(");
-				return;
-			}
-			//console.log("The file [" + output + "] was saved :)");
-		});
-
-		// save the download file
+		savePodcastPlaylist(podcast.playlist, podcast.url_m);
 		if (config.media_download === true && podcast.length <= config.max_media_download_size) {
-			// downloading media file
-			// will pop the next podcast at the end of download
-			downloadFile(podcast.url, feedFolder + podcast.file, processNextPodcast);
+			savePodcastMedia(podcast, processNextPodcast);
 		}
 		else {
 			processNextPodcast();
 		}
 	}
-}
 
-function parseItem(item) {
-	// \u00E0-\u00FC means to keep the accents :)
-	var title = item['title'].replace(/[^a-zA-Z- 0-9.\u00E0-\u00FC]/gi, '');
-	var dateObj = new Date(item['pubDate']);
-	var date = sprintf('%d-%02d-%02d',
-		dateObj.getFullYear(),
-		dateObj.getMonth() + 1,
-		dateObj.getDate());
+	function parseItem(item) {
+		// \u00E0-\u00FC means to keep the accents :)
+		var title = item['title'].replace(/[^a-zA-Z- 0-9.\u00E0-\u00FC]/gi, '');
+		var dateObj = new Date(item['pubDate']);
+		var date = sprintf('%d-%02d-%02d',
+				   dateObj.getFullYear(),
+				   dateObj.getMonth() + 1,
+				   dateObj.getDate());
 
-	var podcast = {
-		"title": title,
-		"date": date,
-		"length": parseInt(item.enclosures[0].length),
-		"url_m": item.enclosures[0].url,
-		"url": item.guid,
-		"playlist": date + '-' + title + '.m3u',
-		"file": date + '-' + title + '.mp3'
-	};
-	return podcast;
-}
+		var podcast = {
+			"title": title,
+			"date": date,
+			"length": parseInt(item.enclosures[0].length),
+			"url_m": item.enclosures[0].url,
+			"url": item.guid,
+			"playlist": feedFolder + date + '-' + title + '.m3u',
+			"file": feedFolder + date + '-' + title + '.mp3'
+		};
+		return podcast;
+	}
 
-function downloadFile(url, dest, callback) {
-	//console.log('=> downloading:', url, dest);
-	var file = fs.createWriteStream(dest);
-	http.get(url, function(response) {
-		response.pipe(file);
-		file.on('finish', function() {
-			file.close(callback);
-		});
-		file.on('error', function(err) {
-			fs.unlink(dest);
-			if (typeof callback === 'function') {
-				callback(err.message);
+	function savePodcastPlaylist(file, playlist) {
+		fs.writeFile(file, '#EXTM3U\n' + playlist, function(error) {
+			if (error) {
+				console.error("The file [" + file + "] could not be saved :", error);
 			}
 		});
-	});
+	}
+
+	function savePodcastMedia(podcast, callback) {
+		var file = fs.createWriteStream(podcast.file);
+		var start_date = Date.now();
+		http.get(podcast.url, function(response) {
+			response.pipe(file);
+			file.on('finish', function() {
+				var download_time = (Date.now() - start_date) / 1000; // in seconds
+				var download_speed = podcast.length / 1000000 / download_time; // download speed in MByte/sec
+				console.log('Downloaded', podcast.length, 'Bytes in', download_time, 'seconds (', download_speed, 'MB/s)');
+				file.close(callback);			
+			});
+			file.on('error', function(err) {
+				fs.unlink(podcast.file);
+				if (typeof callback === 'function') {
+					callback(err.message);
+				}
+			});
+		});
+	}
 }
 
-function createFile(file_name, content, callback) {
-	fs.writeFile(file_name, content, callback);
-}
 
 function mkdirSync(path) {
 	try {
