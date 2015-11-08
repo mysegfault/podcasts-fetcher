@@ -13,6 +13,9 @@ Edit the [configuration file](podcasts_fetcher.json) and update the "rss_feeds" 
 		"http://radiofrance-podcast.net/podcast09/rss_10467.xml",
 		"http://radiofrance-podcast.net/podcast09/rss_11701.xml"
 ],
+"download_folder": "Podcasts",
+"max_media_download_size": "2000000", // in Bytes
+"media_download": false
 ```
 
 ## Create the podcasts files
@@ -24,6 +27,8 @@ X podcasts have been downloaded to Podcasts/AUTHOR/TITLE/ folder
 
 You should find the .m3u files in the "Podcasts" folder (by default)
 ```sh
+$> ls "Podcasts/Radio France/"
+CULTURES MONDE.m3u
 $> ls "Podcasts/Radio France/CULTURES MONDE/"
 2014-10-30 - Heureux qui comme Ulysse.m3u
 ...
